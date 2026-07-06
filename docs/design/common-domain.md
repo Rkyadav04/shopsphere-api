@@ -96,70 +96,141 @@ The Common app will provide reusable abstract models that other applications can
 
 ## TimeStampedModel
 
-### Purpose
+# Shared Models
 
-Automatically stores creation and modification timestamps.
+The Common app provides reusable abstract models that encapsulate functionality shared across multiple applications. These models reduce code duplication, promote consistency, and provide a solid foundation for the entire ShopSphere backend.
 
-### Fields
+Instead of repeating common fields in every model, applications inherit only the features they require.
 
-| Field      | Type          | Purpose                |
-| ---------- | ------------- | ---------------------- |
-| created_at | DateTimeField | Record creation time   |
-| updated_at | DateTimeField | Last modification time |
+---
 
-### Benefits
+# TimeStampedModel
 
-* Automatic auditing
-* Consistent timestamps
-* Reduced duplicate code
-* Useful for reporting and debugging
+## Purpose
+
+`TimeStampedModel` provides automatic timestamp tracking for database records. Every model that inherits from it automatically records when the object was created and when it was last updated.
+
+This eliminates the need to manually define timestamp fields in every application.
+
+## Fields
+
+| Field      | Type          | Description                                                |
+| ---------- | ------------- | ---------------------------------------------------------- |
+| created_at | DateTimeField | Stores the date and time when the record is created.       |
+| updated_at | DateTimeField | Stores the date and time when the record is last modified. |
+
+## Why Abstract?
+
+`TimeStampedModel` is implemented as an abstract model because it is not intended to create its own database table.
+
+Benefits include:
+
+* Eliminates duplicate timestamp fields.
+* Promotes consistency across applications.
+* Simplifies maintenance.
+* Keeps business models clean.
+* Supports automatic auditing.
+
+Every business model that requires timestamps can simply inherit from `TimeStampedModel`.
+
+---
+
+# UUIDModel
+
+## Purpose
+
+`UUIDModel` provides a UUID-based primary key for models that require secure, non-sequential identifiers.
+
+Instead of predictable integer IDs, each record receives a universally unique identifier.
 
 Example:
 
-```python
-class Product(TimeStampedModel):
-    ...
+```text
+550e8400-e29b-41d4-a716-446655440000
 ```
 
----
+## Why UUIDs Are Separated
 
-# Future Base Models
+UUID functionality is intentionally separated from `TimeStampedModel` because each reusable model should have a single responsibility.
 
-## UUIDModel
+Advantages include:
 
-### Purpose
+* Models inherit only the functionality they require.
+* Better adherence to the Single Responsibility Principle (SRP).
+* Easier maintenance and testing.
+* Greater flexibility for future models.
 
-Provide UUID primary keys for models requiring secure public identifiers.
+For example:
 
-### Benefits
+* Some models may require timestamps only.
+* Some models may require UUIDs only.
+* Others may inherit both models.
 
-* Harder to guess IDs
-* Prevents resource enumeration
-* Better suited for distributed systems
-* Consistent identifier format
-
----
-
-## SoftDeleteModel
-
-### Purpose
-
-Allow records to be marked as deleted instead of permanently removing them.
-
-### Future Fields
-
-* is_deleted
-* deleted_at
-* deleted_by
-
-### Benefits
-
-* Preserves historical records
-* Supports data recovery
-* Improves auditing
-* Prevents accidental data loss
+Keeping these concerns separate produces a cleaner and more modular architecture.
 
 ---
+
+# SoftDeleteModel
+
+## Purpose
+
+`SoftDeleteModel` will provide logical deletion instead of permanently removing records from the database.
+
+Rather than deleting data, records will be marked as inactive while remaining available for auditing and recovery.
+
+## Planned Fields
+
+| Field      | Purpose                                        |
+| ---------- | ---------------------------------------------- |
+| is_deleted | Indicates whether the record has been deleted. |
+| deleted_at | Stores the deletion timestamp.                 |
+| deleted_by | Stores the user responsible for the deletion.  |
+
+## Future Implementation
+
+The initial sprint focuses on timestamp functionality only.
+
+Soft deletion will be implemented in a future sprint when the application begins managing business-critical data such as products, orders, customers, and payments.
+
+Benefits include:
+
+* Prevents accidental data loss.
+* Preserves historical records.
+* Supports audit requirements.
+* Enables record restoration.
+* Improves long-term maintainability.
+
+---
+
+# Inheritance Strategy
+
+The project follows a composable inheritance strategy where models inherit only the reusable functionality they require.
+
+```text
+                    models.Model
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+        ▼                ▼                ▼
+TimeStampedModel     UUIDModel     SoftDeleteModel
+        │                │                │
+        └────────────────┼────────────────┘
+                         │
+                         ▼
+                    Business Models
+      (User, Product, Category, Order, Review)
+```
+
+This approach promotes:
+
+* Separation of concerns
+* Code reusability
+* Low coupling
+* High cohesion
+* Easier maintenance
+* Future extensibility
+
+
 
 # Future Extensions
 
